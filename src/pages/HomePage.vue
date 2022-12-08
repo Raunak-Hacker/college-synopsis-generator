@@ -18,8 +18,8 @@
     <form @submit.prevent="postForm">
       <div class="left">
         <div class="fisnput">
-          <label for="team"
-            >Team Members <span @click="addUser"><i class="bx bx-user-plus"></i></span
+          <label for="team" 
+            >Team Members <span @click="addUser" v-if="!nclass.includes('BBA')"><i class="bx bx-user-plus"></i></span
           ></label>
           <TransitionGroup name="list">
             <div class="input-name" v-for="(item, index) in items" :key="item">
@@ -70,6 +70,9 @@
           </select>
           <select v-model="sem" required>
             <option value="" disabled>Semester</option>
+            <option value="SEM IV" v-if="nclass == 'BBA II'">
+              SEM III
+            </option>
             <option value="SEM IV" v-if="nclass == 'BCA II' || nclass == 'BBA II'">
               SEM IV
             </option>
@@ -327,7 +330,7 @@ label[for="team"] {
   color: #000;
   text-align: center;
   padding: 1% 0;
-  width: 100%;
+  width: 80%;
   display: flex;
   justify-content: center;
   cursor: text;

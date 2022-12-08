@@ -19,6 +19,9 @@
       <h1>No teams Registered Yet.</h1>
     </div>
     <div class="teams" v-else>
+      <span class="cm"  v-if="login"
+        ><span class="csv" @click="downloadFile">Download in Excel</span></span
+      >
       <div class="title">
         <img src="../assets/logox.png" alt="" />
         <span
@@ -28,8 +31,8 @@
             <option value="BCA III">BCA III</option>
             <option value="BBA III">BBA III</option>
           </select>
-          SYNOPSIS</span
-        >
+          SYNOPSIS
+        </span>
       </div>
       <div class="team-con" v-for="(team, key, index) in teams" :key="key">
         <div
@@ -43,7 +46,8 @@
               team.first,
               team.second,
               team.roll,
-              team.class
+              team.class,
+              team.sem
             )
           "
         >
@@ -83,10 +87,12 @@
       </div>
     </div>
   </section>
+  <!-- <script src="excel.js"></script> -->
 </template>
 
 <script>
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
+import exportFromJSON from "export-from-json";
 export default {
   data() {
     return {
@@ -109,8 +115,18 @@ export default {
       this.login = true;
     }
   },
+  computed: {
+    filteredTeams() {
+      return this.teams.filter((team) => {
+        return team.class == this.nclass;
+      });
+    },
+    // allTeams() {
+    //   return this.teams;
+    // },
+  },
   methods: {
-    async createPdf(title, names, des, index, first, second, roll, nclass) {
+    async createPdf(title, names, des, index, first, second, roll, nclass, sem) {
       const pdfDoc = await PDFDocument.create();
       const timesRomanFont = await pdfDoc.embedFont(StandardFonts.TimesRoman);
       const page = pdfDoc.addPage();
@@ -154,7 +170,7 @@ export default {
         font: timesRomanFont,
         color: rgb(0, 0, 0),
       });
-      page.drawText("Students Name –  ", {
+      page.drawText("Students Name and Roll No –  ", {
         x: 50,
         y: height - 4 * fontSize - 180,
         size: fontSize,
@@ -172,15 +188,18 @@ export default {
           color: rgb(0, 0, 0),
         });
       }
-      page.drawText("Class  – " + "  " + nclass, {
-        x: 50,
-        y: y - 45,
-        size: fontSize,
-        font: timesRomanFont,
-        color: rgb(0, 0, 0),
-      });
       page.drawText(
-        this.nclass.includes("BCA") ? "Front End" : "Specialization" + " – " + first,
+        "Class  – " + "  " + nclass + "  " + (this.nclass.includes("BBA") ? sem : ""),
+        {
+          x: 50,
+          y: y - 45,
+          size: fontSize,
+          font: timesRomanFont,
+          color: rgb(0, 0, 0),
+        }
+      );
+      page.drawText(
+        (this.nclass.includes("BCA") ? "Front End" : "Specialization") + " – " + first,
         {
           x: 50,
           y: y - 75,
@@ -190,7 +209,7 @@ export default {
         }
       );
       page.drawText(
-        this.nclass.includes("BCA") ? "Back End" : "Name of Industry" + " – " + second,
+        (this.nclass.includes("BCA") ? "Back End" : "Name of Industry") + " – " + second,
         {
           x: 50,
           y: y - 105,
@@ -285,6 +304,63 @@ export default {
       }
       this.fetchData();
     },
+    downloadFile() {
+      let data = [];
+      // new object variable for teams to avoid changing the original data
+      let teams = JSON.parse(JSON.stringify(this.teams));
+      for (let i in teams) {
+        data.push(teams[i]);
+      }
+      console.log(data);
+
+      //  change key names
+      data.forEach((item) => {
+        item.names = item.names.join(", ");
+        item.roll = item.roll.join(", ");
+        // parse date
+        item["Date"] = new Date(item.date).toLocaleDateString();
+        item["Members"] = item.names;
+        item["Roll No"] = item.roll;
+        item["Project Title"] = item.title;
+        if (item.class.includes("BCA")) {
+          item["Front End"] = item.first;
+          item["Back End"] = item.second;
+        } else {
+          item["Specialization"] = item.first;
+          item["Name of Industry"] = item.second;
+        }
+        item["Project Information"] = item.des;
+        item["Class"] = item.class;
+        item["Semester"] = item.sem;
+        item["Project"] = item.project;
+        item["Decision"] = item.decision;
+        item["Email"] = item.email;
+        delete item.title;
+        delete item.names;
+        delete item.roll;
+        delete item.class;
+        delete item.first;
+        delete item.second;
+        delete item.des;
+        delete item.decision;
+        delete item.date;
+        delete item.email;
+        delete item.project;
+        delete item.sem;
+
+        // let keys = Object.keys(item);
+        // keys.sort();
+        // let sorted = {};
+        // keys.forEach((key) => {
+        //   sorted[key] = item[key];
+        // });
+        // data[data.indexOf(item)] = sorted;
+      });
+
+      const fileName = data[0]["Class"] + " Synopsis Teams";
+      const exportType = exportFromJSON.types.csv;
+      exportFromJSON({ data, fileName, exportType });
+    },
     async fetchData() {
       this.isLoading = true;
       try {
@@ -294,6 +370,7 @@ export default {
         const data = await res.json();
         if (data != null) {
           this.teams = data;
+          // this.altTeams = Object.values(data);
           // this.teams.reverse();
           // this.teams = Object.values(data).reverse();
         } else {
@@ -349,10 +426,14 @@ export default {
   display: flex;
   align-items: center;
   flex-direction: column;
+  overflow: hidden;
 }
 .nt img {
   width: 15%;
   object-fit: contain;
+}
+.nt .title{
+  width:100%;
 }
 .title select {
   width: max-content;
@@ -371,6 +452,20 @@ export default {
   justify-content: center;
   min-height: 87vh;
   padding-top: 5vh;
+  position: relative;
+}
+.csv {
+  position: absolute;
+  top: 8%;
+  right: 0;
+  padding: 1% 2%;
+  background: rgb(243, 165, 20);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.25s ease-in-out;
 }
 .head strong {
   font-size: 1.3rem;
@@ -482,6 +577,9 @@ ol {
     font-size: 1rem;
     margin-left: 15%;
   }
+  .cm {
+    margin-top: 5vh;
+  }
   .title select {
     font-size: 1rem;
   }
@@ -512,6 +610,11 @@ ol {
   }
   li {
     font-size: 0.9rem;
+  }
+  .csv {
+    font-size: 0.8rem;
+    padding: 4%;
+    top: 2vh;
   }
 }
 </style>

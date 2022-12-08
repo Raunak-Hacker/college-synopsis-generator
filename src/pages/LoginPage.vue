@@ -64,6 +64,7 @@ export default {
     async login() {
       if (this.email == "ron@gmail.com" && this.password == "123") {
         localStorage.setItem("login", true);
+        this.$router.push("/admin");
       } else {
         alert("Invalid Credentials");
       }

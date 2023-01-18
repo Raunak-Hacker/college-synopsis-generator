@@ -35,6 +35,7 @@
   content: " ";
   display: block;
   position: absolute;
+  z-index: 100000;
   width: 7px;
   height: 7px;
   border-radius: 50%;

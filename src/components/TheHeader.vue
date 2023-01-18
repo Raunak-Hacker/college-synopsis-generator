@@ -13,7 +13,11 @@
       <li><router-link to="/teams">All Teams</router-link></li>
       <li><router-link to="/why-made">Why Made?</router-link></li>
       <li><router-link to="/help">Help</router-link></li>
-      <li><router-link to="/login">Login</router-link></li>
+      <li v-if="auth"><router-link to="/admin">Admin</router-link></li>
+      <li v-if="!auth"><router-link to="/login">Login</router-link></li>
+      <li @click="logout" v-else>
+        <a>Logout</a>
+      </li>
     </ul>
     <transition name="slide">
       <ul class="mnav-links" v-if="menu">
@@ -21,13 +25,16 @@
           <i class="bx bx-x" />
         </div>
         <router-link @click="toggleMenu" to="/"><li>Home</li></router-link>
-        <router-link @click="toggleMenu" to="/help"><li>Help</li></router-link>
-        <router-link @click="toggleMenu" to="/why-made"><li>Why Made?</li></router-link>
         <router-link @click="toggleMenu" to="/teams"><li>All Teams</li></router-link>
+        <router-link @click="toggleMenu" to="/why-made"><li>Why Made?</li></router-link>
+        <router-link @click="toggleMenu" to="/help"><li>Help</li></router-link>
+        <router-link @click="toggleMenu" to="/admin" v-if="auth"
+          ><li>Admin</li></router-link
+        >
         <router-link @click="toggleMenu" to="/login" v-if="!auth"
           ><li>Login</li></router-link
         >
-        <a @click="logout" v-else><li>Logout</li></a>
+        <a @click="logout" v-else><li>Logout</li> </a>
       </ul>
     </transition>
   </header>
@@ -39,14 +46,14 @@ export default {
     return {
       name: false,
       menu: false,
-      auth: false,
     };
   },
-  created() {
-    if (localStorage.getItem("login")) {
-      this.auth = true;
-    }
+  computed: {
+    auth() {
+      return this.$store.getters.isAuth;
+    },
   },
+
   methods: {
     nameX() {
       this.name = !this.name;
@@ -58,9 +65,8 @@ export default {
       this.menu = !this.menu;
     },
     logout() {
-      localStorage.removeItem("login");
-      this.$router.push("/login");
-      this.menu = !this.menu;
+      this.$store.dispatch("logout");
+      window.location.reload();
     },
   },
 };

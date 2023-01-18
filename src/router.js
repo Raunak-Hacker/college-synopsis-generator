@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from "vue-router";
+import store from "./store.js";
 
 const router = createRouter({
   history: createWebHistory(),
@@ -22,18 +23,31 @@ const router = createRouter({
     {
       path: "/login",
       component: () => import("./pages/LoginPage.vue"),
+      meta: {
+        requiresUnauth: true,
+      },
     },
     {
       path: "/admin",
       component: () => import("./pages/AdminPage.vue"),
+      meta: {
+        requiresAuth: true,
+      },
     },
     {
       path: "/:notFound(.*)",
       component: () => import("./pages/NotFound.vue"),
     },
-
-
   ],
+});
+router.beforeEach((to, _, next) => {
+  if (to.meta.requiresUnauth && store.getters.isAuth) {
+    next("/admin");
+  } else if (to.meta.requiresAuth && !store.getters.isAuth) {
+    next("/login");
+  } else {
+    next();
+  }
 });
 
 export default router;

@@ -1,6 +1,5 @@
 <template>
   <section>
-    <!-- <div class="text">Login to access all the features</div> -->
     <div class="container">
       <link
         rel="stylesheet"
@@ -60,37 +59,78 @@ export default {
       email: null,
     };
   },
+  computed: {
+    host() {
+      return this.$store.getters.logHost;
+    },
+    token() {
+      return this.$store.getters.token;
+    },
+    authMessage() {
+      return this.$store.getters.authMessage;
+    },
+    authError() {
+      return this.$store.getters.authError;
+    },
+  },
   methods: {
     async login() {
-      if (this.email == "ron@gmail.com" && this.password == "123") {
-        localStorage.setItem("login", true);
-        this.$router.push("/admin");
-      } else {
-        alert("Invalid Credentials");
+      const user = {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: this.email,
+          password: this.password,
+        }),
+      };
+      const tokenResponse = await fetch(`${this.host}login`, user);
+      const token = await tokenResponse.json();
+      if (!tokenResponse.ok) {
+        const authErr = {
+          message: "Invalid email or password",
+          error: true,
+        };
+        this.$store.commit("setAuthError", authErr);
+        alert("Invalid Credentials")
+        return;
+      } else if (token.token) {
+        localStorage.setItem("token", token.token);
+        this.$store.commit("setAuthError", { message: null, error: false });
+        await this.$store.dispatch("auth", token.token);
+        if (this.authError) {
+          return;
+        }
+        window.location = "/admin";
       }
+
+      // const resp = await fetch(
+      //   "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyBzwHZKvllro7Whqk4YUL9gA6--Ldlq1sQ",
+      //   {
+      //     method: "POST",
+      //     body: JSON.stringify({
+      //       email: this.email,
+      //       password: this.password,
+      //       returnSecureToken: true,
+      //     }),
+      //   }
+      // );
+      // const data = await resp.json();
+      // if (!resp.ok) {
+      //   alert(data.message || "Failed to authenticate");
+      //   return;
+      // } else {
+      //   const token = data.idToken;
+      //   const expiresIn = data.expiresIn;
+      //   localStorage.setItem("token", token);
+      //   const dateresp = await fetch(
+      //     "https://worldtimeapi.org/api/timezone/Asia/Kolkata"
+      //   );
+      //   const dataresp = await dateresp.json();
+      //   const now = new Date(dataresp.datetime);
+      //   console.log(now);
+      //   let expirationDate = new Date(now.getTime() + expiresIn * 1000 * 24);
+      //   localStorage.setItem("expirationDate", expirationDate);
     },
-    //   const user = {
-    //     method: "POST",
-    //     headers: {
-    //       "Content-Type": "application/json",
-    //     },
-    //     body: JSON.stringify({
-    //       email: this.email,
-    //       password: this.password,
-    //     }),
-    //   };
-    //   try {
-    //     await fetch(
-    //       "https://nck-synopsis-default-rtdb.asia-southeast1.firebasedatabase.app/admin/users.json"
-    //     )
-    //       .then((res) => res.json())
-    //       .then((data) => {
-    //         console.log(data);
-    //         // this.users = data;
-    //       });
-    //   } catch (e) {
-    //     alert("Invalid Email or Password");
-    //   }
   },
 };
 </script>

@@ -19,7 +19,7 @@
       <h1>No teams Registered Yet.</h1>
     </div>
     <div class="teams" v-else>
-      <span class="cm"  v-if="login"
+      <span class="cm" v-if="login"
         ><span class="csv" @click="downloadFile">Download in Excel</span></span
       >
       <div class="title">
@@ -87,7 +87,6 @@
       </div>
     </div>
   </section>
-  <!-- <script src="excel.js"></script> -->
 </template>
 
 <script>
@@ -99,9 +98,9 @@ export default {
       teams: [],
       isLoading: false,
       nclass: null,
-      login: false,
     };
   },
+
   mounted() {
     window.scrollTo({
       top: 0,
@@ -111,9 +110,7 @@ export default {
   async created() {
     this.nclass = localStorage.getItem("class");
     this.fetchData();
-    if (localStorage.getItem("login")) {
-      this.login = true;
-    }
+    console.log("this.login");
   },
   computed: {
     filteredTeams() {
@@ -121,9 +118,9 @@ export default {
         return team.class == this.nclass;
       });
     },
-    // allTeams() {
-    //   return this.teams;
-    // },
+    login() {
+      return this.$store.getters.isAuth;
+    },
   },
   methods: {
     async createPdf(title, names, des, index, first, second, roll, nclass, sem) {
@@ -174,6 +171,8 @@ export default {
         x: 50,
         y: height - 4 * fontSize - 180,
         size: fontSize,
+
+        // bold font
         font: timesRomanFont,
         color: rgb(0, 0, 0),
       });
@@ -277,7 +276,6 @@ export default {
     },
     changeClass() {
       localStorage.setItem("class", this.nclass);
-      console.log(this.nclass);
       this.fetchData();
     },
     async dec(x, i, title) {
@@ -311,7 +309,6 @@ export default {
       for (let i in teams) {
         data.push(teams[i]);
       }
-      console.log(data);
 
       //  change key names
       data.forEach((item) => {
@@ -432,8 +429,8 @@ export default {
   width: 15%;
   object-fit: contain;
 }
-.nt .title{
-  width:100%;
+.nt .title {
+  width: 100%;
 }
 .title select {
   width: max-content;
@@ -456,7 +453,7 @@ export default {
 }
 .csv {
   position: absolute;
-  top: 8%;
+  top: 2%;
   right: 0;
   padding: 1% 2%;
   background: rgb(243, 165, 20);

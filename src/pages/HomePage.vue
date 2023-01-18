@@ -1,5 +1,8 @@
 <template>
-  <home-start v-if="hstart && reg" @start="start" />
+  <div v-if="isLoading">
+    <base-spinner></base-spinner>
+  </div>
+  <home-start v-else-if="hstart && reg" @start="start" />
   <section class="home" v-else-if="reg">
     <VueCountdown @end="update" v-slot="{ days, hours, minutes, seconds }" :time="time">
       <div class="cd">
@@ -18,8 +21,10 @@
     <form @submit.prevent="postForm">
       <div class="left">
         <div class="fisnput">
-          <label for="team" 
-            >Team Members <span @click="addUser" v-if="!nclass.includes('BBA')"><i class="bx bx-user-plus"></i></span
+          <label for="team"
+            >Team Members
+            <span @click="addUser" v-if="!nclass.includes('BBA')"
+              ><i class="bx bx-user-plus"></i></span
           ></label>
           <TransitionGroup name="list">
             <div class="input-name" v-for="(item, index) in items" :key="item">
@@ -49,7 +54,6 @@
                 name="name"
                 oninvalid="setCustomValidity('Invalid! Roll No.')"
                 oninput="setCustomValidity('')"
-                id="name"
                 placeholder="Roll"
                 v-model.trim="roll[index]"
               />
@@ -70,9 +74,7 @@
           </select>
           <select v-model="sem" required>
             <option value="" disabled>Semester</option>
-            <option value="SEM IV" v-if="nclass == 'BBA II'">
-              SEM III
-            </option>
+            <option value="SEM IV" v-if="nclass == 'BBA II'">SEM III</option>
             <option value="SEM IV" v-if="nclass == 'BCA II' || nclass == 'BBA II'">
               SEM IV
             </option>
@@ -128,7 +130,28 @@
   </section>
   <section class="regclose" v-else>
     <div class="title">
-      <img src="../assets/logox.png" alt="" /> <span>REGISTRATION CLOSED</span>
+      <div class="mb">
+        <select v-model="nclass" @change="setClass">
+          <option value="BCA II">BCA II</option>
+          <option value="BBA II">BBA II</option>
+          <option value="BCA III">BCA III</option>
+          <option value="BBA III">BBA III</option>
+        </select>
+      </div>
+      <img class="cl" src="../assets/logox.png" alt="" />
+      <span class="mb">
+        <img src="../assets/logox.png" alt="" />
+        REGISTRATION CLOSED</span
+      >
+      <span class="cl">
+        <select v-model="nclass" @change="setClass">
+          <option value="BCA II">BCA II</option>
+          <option value="BBA II">BBA II</option>
+          <option value="BCA III">BCA III</option>
+          <option value="BBA III">BBA III</option>
+        </select>
+        REGISTRATION CLOSED</span
+      >
     </div>
     <div class="text">
       <p>
@@ -148,15 +171,14 @@ export default {
     HomeStart,
     VueCountdown,
   },
-  created() {
+  async created() {
     if (localStorage.getItem("class")) {
       this.nclass = localStorage.getItem("class");
       this.hstart = false;
     }
+    this.changeDate();
   },
   data() {
-    const now = new Date();
-    const deadline = new Date("January 01 2023 22:53:59");
     return {
       hstart: true,
       items: 1,
@@ -168,16 +190,42 @@ export default {
       email: null,
       front: null,
       back: null,
-      nclass: null,
+      nclass: "BCA III",
       sem: "",
       project: "",
-      time: deadline - now,
+      isLoading: false,
+      time: new Date(),
       reg: true,
     };
   },
   methods: {
+    async changeDate() {
+      this.isLoading = true;
+      let deadline = new Date();
+      const res = await fetch(
+        `https://nck-synopsis-default-rtdb.asia-southeast1.firebasedatabase.app/admin/${this.nclass}.json`
+      );
+      const data = await res.json();
+      if (data != null) {
+        deadline = new Date(data.date);
+        deadline.setHours(23);
+        deadline.setMinutes(59);
+        deadline.setSeconds(59);
+      }
+      const dateresp = await fetch("https://worldtimeapi.org/api/timezone/Asia/Kolkata");
+      const dataresp = await dateresp.json();
+      const now = new Date(dataresp.datetime);
+      this.time = deadline - now;
+      if (this.time <= 0) {
+        this.reg = false;
+      } else {
+        this.reg = true;
+      }
+      this.isLoading = false;
+    },
     setClass() {
       localStorage.setItem("class", this.nclass);
+      this.changeDate();
     },
     addUser() {
       this.items <= 3 ? this.items++ : this.items;
@@ -192,12 +240,21 @@ export default {
     async postForm() {
       this.disabled = true;
       this.names = this.names.filter((name) => name !== "");
+      this.roll = this.roll.filter((roll) => roll !== "");
+      if (this.names.length !== this.roll.length) {
+        alert("Please enter all the names or roll numbers or clear the extra fields");
+        this.disabled = false;
+        return;
+      }
+      const dateresp = await fetch("https://worldtimeapi.org/api/timezone/Asia/Kolkata");
+      const dataresp = await dateresp.json();
+      const now = new Date(dataresp.datetime);
       const team = {
         names: this.names,
         title: this.title,
         des: this.des,
         email: this.email,
-        date: new Date(),
+        date: now,
         class: this.nclass,
         sem: this.sem,
         project: this.project,
@@ -297,7 +354,9 @@ export default {
   margin-left: 10%;
   letter-spacing: normal;
 }
-
+.mb {
+  display: none;
+}
 .title {
   font-size: 2.2em;
   font-weight: 600;
@@ -456,6 +515,14 @@ select {
   outline: 0;
   transition: all 0.25s ease-in-out;
 }
+.cl {
+  white-space: nowrap;
+  margin-top: 0.5%;
+}
+.cl select {
+  padding: 1%;
+  font-size: 1.9rem;
+}
 .opts {
   flex-direction: row;
 }
@@ -511,7 +578,9 @@ button {
     margin-right: 0;
   }
   .title {
-    margin-top: 5%;
+    display: flex;
+    flex-direction: column;
+    margin-top: 5vh;
     font-size: 1.6rem;
   }
   .title img {
@@ -561,12 +630,13 @@ button {
     width: fit-content;
     font-size: 1.2rem;
     text-align: justify;
+    display: block;
+    margin-top: 5vh;
   }
   .regclose {
     padding: 0 10%;
   }
   .regclose .title {
-    margin-top: 5%;
     font-size: 1.3rem;
     white-space: nowrap;
   }
@@ -584,6 +654,23 @@ button {
   .time span {
     font-size: 0.9rem;
     margin: 0;
+  }
+  .cl {
+    display: none;
+  }
+  .mb {
+    display: block;
+    padding-top: 5vh;
+  }
+  .mb select {
+    width: max-content;
+    font-size: 1.15rem;
+    padding: 10%;
+  }
+  span.mb {
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 }
 </style>

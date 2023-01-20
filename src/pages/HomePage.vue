@@ -139,10 +139,10 @@
         </select>
       </div>
       <img class="cl" src="../assets/logox.png" alt="" />
-      <span class="mb">
+      <section class="mb">
         <img src="../assets/logox.png" alt="" />
-        REGISTRATION CLOSED</span
-      >
+        REGISTRATION CLOSED
+      </section>
       <span class="cl">
         <select v-model="nclass" @change="setClass">
           <option value="BCA II">BCA II</option>
@@ -198,28 +198,42 @@ export default {
       reg: true,
     };
   },
+  computed: {
+    host() {
+      return this.$store.getters.host;
+    },
+  },
   methods: {
     async changeDate() {
       this.isLoading = true;
       let deadline = new Date();
-      const res = await fetch(
-        `https://nck-synopsis-default-rtdb.asia-southeast1.firebasedatabase.app/admin/${this.nclass}.json`
-      );
-      const data = await res.json();
-      if (data != null) {
-        deadline = new Date(data.date);
-        deadline.setHours(23);
-        deadline.setMinutes(59);
-        deadline.setSeconds(59);
-      }
-      const dateresp = await fetch("https://worldtimeapi.org/api/timezone/Asia/Kolkata");
-      const dataresp = await dateresp.json();
-      const now = new Date(dataresp.datetime);
-      this.time = deadline - now;
-      if (this.time <= 0) {
+      try {
+        const res = await fetch(this.host + "/get-date/");
+        const data = await res.json();
+        if (data != null) {
+          for (let i = 0; i < data.length; i++) {
+            if (data[i].class === this.nclass) {
+              deadline = new Date(data[i].date);
+              break;
+            }
+          }
+        }
+        const dateresp = await fetch(
+          "https://worldtimeapi.org/api/timezone/Asia/Kolkata"
+        );
+        const dataresp = await dateresp.json();
+        const now = new Date(dataresp.datetime);
+        this.time = deadline - now;
+        if (this.time <= 0) {
+          this.reg = false;
+        } else {
+          this.reg = true;
+        }
+      } catch (e) {
         this.reg = false;
-      } else {
-        this.reg = true;
+        alert(
+          "Something went wrong, can't connect to server please try again later in 1 hr."
+        );
       }
       this.isLoading = false;
     },
@@ -246,27 +260,22 @@ export default {
         this.disabled = false;
         return;
       }
-      const dateresp = await fetch("https://worldtimeapi.org/api/timezone/Asia/Kolkata");
-      const dataresp = await dateresp.json();
-      const now = new Date(dataresp.datetime);
+      let names = [];
+      for (let i = 0; i < this.names.length; i++) {
+        names.push({ name: this.names[i], roll: this.roll[i] });
+      }
       const team = {
-        names: this.names,
+        names: names,
         title: this.title,
         des: this.des,
         email: this.email,
-        date: now,
         class: this.nclass,
         sem: this.sem,
         project: this.project,
         first: this.front,
         second: this.back,
-        roll: this.roll,
-        decision: "review pending",
       };
-
-      const res = await fetch(
-        `https://nck-synopsis-default-rtdb.asia-southeast1.firebasedatabase.app/${this.nclass}teams.json`
-      );
+      const res = await fetch(this.host + "/get-teams/");
       const data = await res.json();
       for (const key in data) {
         if (data[key].email === this.email) {
@@ -275,19 +284,20 @@ export default {
         }
       }
       try {
-        const resp = await fetch(
-          `https://nck-synopsis-default-rtdb.asia-southeast1.firebasedatabase.app/teams/${this.nclass}.json`,
-          {
-            method: "POST",
-            body: JSON.stringify(team),
-          }
-        );
-        if (resp.status !== 200) {
-          alert("Something went wrong");
+        const resp = await fetch(this.host + "/add-team/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(team),
+        });
+        const data = await resp.json();
+        if (data.status !== "success") {
+          alert("Something went wrong, please try again later in 1 hr.");
           return;
         }
       } catch (err) {
-        alert("Something went wrong");
+        alert("Something went wrong, please try again later in 1 hr.");
         return;
       }
       this.names = [];
@@ -340,7 +350,6 @@ export default {
   width: max-content;
 }
 .time {
-  /* width: calc(50%/3); */
   width: max-content;
   height: 100%;
   display: flex;
@@ -348,6 +357,7 @@ export default {
   align-items: center;
   font-size: 2rem;
   letter-spacing: 0.4rem;
+  padding: 0.5rem;
 }
 .time span {
   font-size: 1.2rem;
@@ -580,8 +590,8 @@ button {
   .title {
     display: flex;
     flex-direction: column;
-    margin-top: 5vh;
     font-size: 1.6rem;
+    height: max-content;
   }
   .title img {
     object-fit: contain;
@@ -667,7 +677,7 @@ button {
     font-size: 1.15rem;
     padding: 10%;
   }
-  span.mb {
+  section.mb {
     display: flex;
     align-items: center;
     justify-content: center;

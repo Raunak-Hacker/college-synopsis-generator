@@ -61,7 +61,7 @@ export default {
   },
   computed: {
     host() {
-      return this.$store.getters.logHost;
+      return this.$store.getters.host;
     },
     token() {
       return this.$store.getters.token;
@@ -83,15 +83,15 @@ export default {
           password: this.password,
         }),
       };
-      const tokenResponse = await fetch(`${this.host}login`, user);
+      const tokenResponse = await fetch(this.host + "/login/", user);
       const token = await tokenResponse.json();
-      if (!tokenResponse.ok) {
+      if (!token.token) {
         const authErr = {
           message: "Invalid email or password",
           error: true,
         };
         this.$store.commit("setAuthError", authErr);
-        alert("Invalid Credentials")
+        alert("Invalid Credentials");
         return;
       } else if (token.token) {
         localStorage.setItem("token", token.token);
@@ -102,34 +102,6 @@ export default {
         }
         window.location = "/admin";
       }
-
-      // const resp = await fetch(
-      //   "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyBzwHZKvllro7Whqk4YUL9gA6--Ldlq1sQ",
-      //   {
-      //     method: "POST",
-      //     body: JSON.stringify({
-      //       email: this.email,
-      //       password: this.password,
-      //       returnSecureToken: true,
-      //     }),
-      //   }
-      // );
-      // const data = await resp.json();
-      // if (!resp.ok) {
-      //   alert(data.message || "Failed to authenticate");
-      //   return;
-      // } else {
-      //   const token = data.idToken;
-      //   const expiresIn = data.expiresIn;
-      //   localStorage.setItem("token", token);
-      //   const dateresp = await fetch(
-      //     "https://worldtimeapi.org/api/timezone/Asia/Kolkata"
-      //   );
-      //   const dataresp = await dateresp.json();
-      //   const now = new Date(dataresp.datetime);
-      //   console.log(now);
-      //   let expirationDate = new Date(now.getTime() + expiresIn * 1000 * 24);
-      //   localStorage.setItem("expirationDate", expirationDate);
     },
   },
 };

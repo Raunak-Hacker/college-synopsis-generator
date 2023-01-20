@@ -24,9 +24,6 @@
   </section>
 </template>
 
-<script>
-export default {};
-</script>
 
 <style scoped>
 .help {
@@ -34,7 +31,6 @@ export default {};
   justify-content: center;
   align-items: center;
   height: 87vh;
-  padding-top: 5vh;
 }
 strong {
   font-size: 1.1rem;
@@ -45,6 +41,7 @@ strong {
   width: 100%;
   display: flex;
   flex-direction: column;
+  justify-content: center;
   align-items: center;
   width: 70%;
 }
@@ -58,7 +55,7 @@ strong {
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.26);
   height: 15vh;
-  margin-bottom: 8vh;
+  margin: 4vh 0;
   padding: 0 5%;
   padding-left: 3%;
   transition: all 0.5s ease-in;

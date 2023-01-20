@@ -17,6 +17,11 @@ const router = createRouter({
       component: () => import("./pages/HelpPage.vue"),
     },
     {
+      path: "/help/:id",
+      component: () => import("./pages/HelpQuery.vue"),
+      props: true,
+    },
+    {
       path: "/why-made",
       component: () => import("./pages/WhyPage.vue"),
     },

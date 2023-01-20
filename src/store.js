@@ -2,9 +2,8 @@ import { createStore } from "vuex";
 
 const store = createStore({
   state: {
-    host: "https://baku.rdivas.in/admin/",
-    // host: "http://localhost:6969/admin/",
-    logHost: "https://baku.rdivas.in/",
+    host: "https://fragile-fly-jodhpurs.cyclic.app",
+    //  host: "https://nck-synopsis-backend-production.up.railway.app",
     token: null,
     authError: false,
     authMessage: null,
@@ -12,25 +11,25 @@ const store = createStore({
   },
   actions: {
     async auth(context, token) {
-      const auth = await fetch(`${context.getters.host}user/`, {
+      const auth = await fetch(`${context.getters.host}/check-token/`, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
       });
       const authResponse = await auth.json();
-      if (authResponse.status === "success") {
+      if (authResponse.status === 201) {
         context.commit("setAuth", true);
         context.commit("setAuthError", { message: null, error: false });
         context.commit("setToken", token);
         return;
-      } else if (authResponse.status !== "success") {
+      } else if (authResponse.status !== 201) {
         console.log(authResponse);
         const authErr = {
           message: "Unauthorized",
           error: true,
         };
-        alert("Invalid Credentials")
+        alert("Invalid Credentials");
         context.commit("setAuthError", authErr);
         return context.dispatch("logout");
       }
@@ -59,9 +58,9 @@ const store = createStore({
     },
   },
   getters: {
-    logHost: (state) => state.logHost,
     host: (state) => state.host,
     isAuth: (state) => state.auth,
+    token: (state) => state.token,
   },
 });
 

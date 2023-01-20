@@ -1,16 +1,16 @@
 <template>
   <section class="help">
     <div class="items">
-      <div class="item">
+      <div class="item" @click="pushQuery(1)">
         <strong>How to submit the synopsis in right way?</strong>
         <i class="bx bx-arrow-to-right"></i>
       </div>
-      <div class="item">
+      <div class="item" @click="pushQuery(2)">
         <strong>How to generate synopsis pdf and download?</strong>
         <i class="bx bx-arrow-to-right"></i>
       </div>
-      <div class="item">
-        <strong>How to edit or delete your entry in teams?</strong>
+      <div class="item" @click="pushQuery(3)">
+        <strong>How to edit or delete your team entry in teams?</strong>
         <i class="bx bx-arrow-to-right"></i>
       </div>
     </div>
@@ -18,7 +18,13 @@
 </template>
 
 <script>
-export default {};
+export default {
+  methods: {
+    pushQuery(id) {
+      this.$router.push("/help/" + id);
+    },
+  },
+};
 </script>
 
 <style scoped>

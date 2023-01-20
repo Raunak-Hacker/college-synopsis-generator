@@ -30,30 +30,14 @@ export default {
   components: {
     Datepicker,
   },
-  // async beforeRouteEnter(to, from, next) {
-  //   if (localStorage.getItem("token")) {
-  //     const resp = await fetch(
-  //       "https://securetoken.googleapis.com/v1/token?key=AIzaSyBzwHZKvllro7Whqk4YUL9gA6--Ldlq1sQ",
-  //       {
-  //         method: "POST",
-  //         headers: { "Content-Type": "application/x-www-form-urlencoded" },
-  //         body: JSON.stringify({
-  //           grant_type: "refresh_token",
-  //           refresh_token: localStorage.getItem("token"),
-  //         }),
-  //       }
-  //     );
-  //     const data = await resp.json();
-  //     if (resp.ok) {
-  //       localStorage.setItem("token", data.refresh_token);
-  //       next();
-  //     } else {
-  //       next("/login");
-  //     }
-  //   } else {
-  //     next("/login");
-  //   }
-  // },
+  computed: {
+    host() {
+      return this.$store.getters.host;
+    },
+    token() {
+      return this.$store.getters.token;
+    },
+  },
   data() {
     return {
       date: new Date(),
@@ -68,22 +52,27 @@ export default {
   methods: {
     changeClass() {
       localStorage.setItem("class", this.nclass);
+      this.fetchData();
     },
     async submit() {
       this.isLoading = true;
       try {
-        const res = await fetch(
-          `https://nck-synopsis-default-rtdb.asia-southeast1.firebasedatabase.app/admin/${this.nclass}.json`,
-          {
-            method: "PUT",
-            body: JSON.stringify({
-              date: this.date,
-            }),
-          }
-        );
+        const res = await fetch(this.host + "/change-date/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${this.token}`,
+          },
+          body: JSON.stringify({
+            date: this.date,
+            class: this.nclass,
+          }),
+        });
         const data = await res.json();
-        if (data != null) {
+        if (data.status === "success") {
           alert("Date changed");
+        } else {
+          alert("Something went wrong");
         }
       } catch (e) {
         console.log(e);
@@ -93,12 +82,15 @@ export default {
     async fetchData() {
       this.isLoading = true;
       try {
-        const res = await fetch(
-          `https://nck-synopsis-default-rtdb.asia-southeast1.firebasedatabase.app/admin/${this.nclass}.json`
-        );
+        const res = await fetch(this.host + "/get-date/");
         const data = await res.json();
         if (data != null) {
-          this.date = new Date(data.date);
+          for (let i = 0; i < data.length; i++) {
+            if (data[i].class === this.nclass) {
+              this.date = new Date(data[i].date);
+              break;
+            }
+          }
         }
       } catch (e) {
         console.log(e);

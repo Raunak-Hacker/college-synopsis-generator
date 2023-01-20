@@ -34,18 +34,17 @@
           SYNOPSIS
         </span>
       </div>
-      <div class="team-con" v-for="(team, key, index) in teams" :key="key">
+      <div class="team-con" v-for="(team, index) in teams" :key="team.title">
         <div
           class="team"
           @click="
             createPdf(
               team.title,
-              team.names,
-              team.des,
+              team.student,
+              team.description,
               index,
               team.first,
               team.second,
-              team.roll,
               team.class,
               team.sem
             )
@@ -53,7 +52,7 @@
         >
           <div class="left">
             <div class="head">
-              <strong>Team {{ Object.keys(teams).length - index }}</strong>
+              <strong>Team {{ teams.length - index }}</strong>
               <span
                 :style="
                   team.decision == 'review pending'
@@ -69,7 +68,13 @@
             <div class="ptitle"><strong>Project Title</strong> - {{ team.title }}</div>
             <br />
             <ol>
-              <li v-for="name in team.names" :key="name">{{ name }}</li>
+              <li
+                v-for="name in team.student"
+                style="text-transform: capitalize"
+                :key="name.id"
+              >
+                {{ name.name }}
+              </li>
             </ol>
           </div>
           <div class="right">
@@ -77,10 +82,10 @@
           </div>
         </div>
         <div class="btns" v-if="login">
-          <button style="background: limegreen" @click="dec('y', key, team.title)">
+          <button style="background: limegreen" @click="dec('y', team.id, team.title)">
             Approve
           </button>
-          <button style="background: red" @click="dec('n', key, team.title)">
+          <button style="background: red" @click="dec('n', team.id, team.title)">
             Reject
           </button>
         </div>
@@ -110,7 +115,6 @@ export default {
   async created() {
     this.nclass = localStorage.getItem("class");
     this.fetchData();
-    console.log("this.login");
   },
   computed: {
     filteredTeams() {
@@ -121,9 +125,15 @@ export default {
     login() {
       return this.$store.getters.isAuth;
     },
+    host() {
+      return this.$store.getters.host;
+    },
+    token() {
+      return this.$store.getters.token;
+    },
   },
   methods: {
-    async createPdf(title, names, des, index, first, second, roll, nclass, sem) {
+    async createPdf(title, names, des, index, first, second, nclass, sem) {
       const pdfDoc = await PDFDocument.create();
       const timesRomanFont = await pdfDoc.embedFont(StandardFonts.TimesRoman);
       const page = pdfDoc.addPage();
@@ -179,7 +189,7 @@ export default {
       let y = 0;
       for (let i = 0; i < names.length; i++) {
         y = height - 4 * fontSize - 210 - i * 20;
-        page.drawText(i + 1 + ") " + "  " + names[i] + "  " + roll[i], {
+        page.drawText(i + 1 + ") " + "  " + names[i].name + "  " + names[i].roll, {
           x: 50,
           y: y,
           size: fontSize,
@@ -278,27 +288,29 @@ export default {
       localStorage.setItem("class", this.nclass);
       this.fetchData();
     },
-    async dec(x, i, title) {
+    async dec(x, id, title) {
       if (x == "y" && confirm("Are you sure you want to approve: " + title + "?")) {
-        await fetch(
-          `https://nck-synopsis-default-rtdb.asia-southeast1.firebasedatabase.app/teams/${this.nclass}/${i}.json`,
-          {
-            method: "PATCH",
-            body: JSON.stringify({
-              decision: "approved",
-            }),
-          }
-        );
+        await fetch(this.host + "/change-decision/" + id, {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${this.token}`,
+          },
+          method: "POST",
+          body: JSON.stringify({
+            decision: "approved",
+          }),
+        });
       } else if (x == "n" && confirm("Are you sure you want to reject: " + title + "?")) {
-        await fetch(
-          `https://nck-synopsis-default-rtdb.asia-southeast1.firebasedatabase.app/teams/${this.nclass}/${i}.json`,
-          {
-            method: "PATCH",
-            body: JSON.stringify({
-              decision: "rejected",
-            }),
-          }
-        );
+        await fetch(this.host + "/change-decision/" + id, {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${this.token}`,
+          },
+          method: "POST",
+          body: JSON.stringify({
+            decision: "rejected",
+          }),
+        });
       }
       this.fetchData();
     },
@@ -307,17 +319,16 @@ export default {
       // new object variable for teams to avoid changing the original data
       let teams = JSON.parse(JSON.stringify(this.teams));
       for (let i in teams) {
-        data.push(teams[i]);
+        data.unshift(teams[i]);
       }
-
-      //  change key names
       data.forEach((item) => {
-        item.names = item.names.join(", ");
-        item.roll = item.roll.join(", ");
-        // parse date
+        let namesandroll = "";
+        item.student.forEach((student) => {
+          namesandroll += "(" + student.roll + ") " + student.name + ", ";
+          // roll += student.roll + ", ";
+        });
         item["Date"] = new Date(item.date).toLocaleDateString();
-        item["Members"] = item.names;
-        item["Roll No"] = item.roll;
+        item["Roll No. and Names"] = namesandroll;
         item["Project Title"] = item.title;
         if (item.class.includes("BCA")) {
           item["Front End"] = item.first;
@@ -326,19 +337,20 @@ export default {
           item["Specialization"] = item.first;
           item["Name of Industry"] = item.second;
         }
-        item["Project Information"] = item.des;
+        item["Project Information"] = item.description;
         item["Class"] = item.class;
         item["Semester"] = item.sem;
         item["Project"] = item.project;
         item["Decision"] = item.decision;
         item["Email"] = item.email;
+        delete item.student;
         delete item.title;
         delete item.names;
         delete item.roll;
         delete item.class;
         delete item.first;
         delete item.second;
-        delete item.des;
+        delete item.description;
         delete item.decision;
         delete item.date;
         delete item.email;
@@ -361,21 +373,23 @@ export default {
     async fetchData() {
       this.isLoading = true;
       try {
-        const res = await fetch(
-          `https://nck-synopsis-default-rtdb.asia-southeast1.firebasedatabase.app/teams/${this.nclass}.json`
-        );
+        const res = await fetch(this.host + "/get-teams");
         const data = await res.json();
         if (data != null) {
-          this.teams = data;
-          // this.altTeams = Object.values(data);
-          // this.teams.reverse();
-          // this.teams = Object.values(data).reverse();
+          let dataTeams = [];
+          for (let i in data) {
+            if (data[i].class == this.nclass) {
+              dataTeams.push(data[i]);
+            }
+          }
+          this.teams = dataTeams.reverse();
         } else {
           this.teams = [];
         }
       } catch (e) {
         console.log(e);
       }
+
       this.isLoading = false;
     },
   },

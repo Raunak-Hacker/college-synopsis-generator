@@ -113,8 +113,13 @@ export default {
     });
   },
   async created() {
-    this.nclass = localStorage.getItem("class");
-    this.fetchData();
+    if (!localStorage.getItem("class")) {
+      this.isLoading = true;
+      return this.$router.replace("/");
+    } else {
+      this.nclass = localStorage.getItem("class");
+      this.fetchData();
+    }
   },
   computed: {
     filteredTeams() {
@@ -237,20 +242,19 @@ export default {
       fontSize = 12;
       // remove \n \r in des
       des = des.replace(/(\r\n|\n|\r)/gm, "");
-      if (des.includes("i)")) {
-        if (!des.includes("iv)")) {
-          des = des.replace(/i\)/, "\ni) ");
-          des = des.replace(/ii\)/, "\n \nii) ");
-          des = des.replace(/iii\)/, "\n \niii) ");
-        } else {
-          des = des.replace(/i\)/, "\ni) ");
-          des = des.replace(/ii\)/, "\nii) ");
-          des = des.replace(/iii\)/, "\niii) ");
-          des = des.replace(/iv\)/, "\niv) ");
-          des = des.replace(/v\)/, "\nv) ");
-          des = des.replace(/vi\)/, "\nvi) ");
-        }
+      if (!des.includes("iv)")) {
+        des = des.replace(/i\)/, "\ni) ");
+        des = des.replace(/ii\)/, "\n \nii) ");
+        des = des.replace(/iii\)/, "\n \niii) ");
+      } else {
+        des = des.replace(/i\)/, "\ni) ");
+        des = des.replace(/ii\)/, "\nii) ");
+        des = des.replace(/iii\)/, "\niii) ");
+        des = des.replace(/iv\)/, "\niv) ");
+        // des = des.replace(/v\)/, "\nv) ");
+        // des = des.replace(/vi\)/, "\nvi) ");
       }
+
       page.drawText(des, {
         x: 70,
         y: y - 175,
@@ -406,7 +410,11 @@ export default {
   height: 20%;
   display: flex;
   align-items: center;
+
   justify-content: center;
+}
+.ptitle {
+  text-transform: capitalize;
 }
 .title img {
   width: 7%;

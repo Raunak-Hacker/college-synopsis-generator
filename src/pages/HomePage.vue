@@ -118,7 +118,7 @@
             rows="10"
             type="text"
             v-model.trim="des"
-            placeholder="Start with i) ii) iii) ... &#10;&#10;for eg. &#10; &#10;i) This is a point&#10;ii) This is another point"
+            placeholder="Kindly Start with i) ii) iii) ... &#10;&#10;for eg. &#10; &#10;i) This is a point&#10;ii) This is another point"
             required
           />
         </div>
@@ -218,11 +218,9 @@ export default {
             }
           }
         }
-        const dateresp = await fetch(
-          "https://worldtimeapi.org/api/timezone/Asia/Kolkata"
-        );
+        const dateresp = await fetch(this.host + "/get-now-date/");
         const dataresp = await dateresp.json();
-        const now = new Date(dataresp.datetime);
+        const now = new Date(dataresp);
         this.time = deadline - now;
         if (this.time <= 0) {
           this.reg = false;
@@ -293,12 +291,10 @@ export default {
         });
         const data = await resp.json();
         if (data.status !== "success") {
-          alert("Something went wrong, please try again later in 1 hr.");
-          return;
+          return alert(data.message + " !!");
         }
       } catch (err) {
-        alert("Something went wrong, please try again later in 1 hr.");
-        return;
+        return alert("Something went wrong, please try again later in 1 hr.");
       }
       this.names = [];
       this.title = null;

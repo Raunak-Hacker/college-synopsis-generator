@@ -16,6 +16,7 @@ export default {
       this.$store.dispatch("autoLogin");
     }
   },
+
   components: {
     TheHeader,
   },

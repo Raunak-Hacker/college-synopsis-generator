@@ -2,8 +2,8 @@ import { createStore } from "vuex";
 
 const store = createStore({
   state: {
-    host: "https://fragile-fly-jodhpurs.cyclic.app",
-    //  host: "https://nck-synopsis-backend-production.up.railway.app",
+    // host: "https://fragile-fly-jodhpurs.cyclic.app",
+    host: "https://nck-synopsis-backend-production.up.railway.app",
     token: null,
     authError: false,
     authMessage: null,

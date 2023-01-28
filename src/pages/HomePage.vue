@@ -278,6 +278,7 @@ export default {
       for (const key in data) {
         if (data[key].email === this.email) {
           alert("Email already exists");
+          this.disabled = false;
           return;
         }
       }

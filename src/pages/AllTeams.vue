@@ -347,6 +347,7 @@ export default {
         item["Project"] = item.project;
         item["Decision"] = item.decision;
         item["Email"] = item.email;
+        delete item.id;
         delete item.student;
         delete item.title;
         delete item.names;
@@ -360,14 +361,6 @@ export default {
         delete item.email;
         delete item.project;
         delete item.sem;
-
-        // let keys = Object.keys(item);
-        // keys.sort();
-        // let sorted = {};
-        // keys.forEach((key) => {
-        //   sorted[key] = item[key];
-        // });
-        // data[data.indexOf(item)] = sorted;
       });
 
       const fileName = data[0]["Class"] + " Synopsis Teams";

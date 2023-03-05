@@ -1,7 +1,17 @@
-# Vue 3 + Vite
+# NCK - Synopsis Generator
 
-This template should help get you started developing with Vue 3 in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+[Website Link](https://nck-synopsis.web.app/)
 
-## Recommended IDE Setup
+![image](https://nck-synopsis.web.app/assets/s1.1a0cbd6a.png)
 
-- [VS Code](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar)
+![image](https://nck-synopsis.web.app/assets/s2.84b2711c.png)
+
+![image](https://user-images.githubusercontent.com/67480737/222949157-080898ef-b8c9-4f6f-b775-441a31428d20.png)
+
+Click On a team to convert to PDF Synopsis
+
+# Admin View 
+
+Can Download All Teams Data converted in csv (Excel)
+
+![image](https://user-images.githubusercontent.com/67480737/222949228-ee16dc66-298a-4d9b-a7a6-1bb3a4023fa0.png)
